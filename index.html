@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <title>திருவூடல் திருப்பணி குழு</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Title */
+    .h1 {
+      color: white;
+      text-align: center;
+      margin: 8px 0;
+      font-size: clamp(14px, 3vw, 20px);
+      z-index: 5;
+      position: relative;
+    }
+
+    
+    .bottom-bar {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      padding: 8px 10px;
+      border-radius: 16px;
+      
+    }
+
+   
+    .btn {
+      background: transparent;
+      color: white;
+      border: none;
+      font-size: clamp(18px, 5vw, 26px);
+      cursor: pointer;
+    }
+
+   
+    .time {
+      font-size: clamp(11px, 3vw, 14px);
+      min-width: 40px;
+      text-align: center;
+    }
+
+    
+    input[type="range"] {
+      flex: 1;
+      height: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+ 
+
+  <video id="video" autoplay muted playsinline loop preload="auto">
+    <source src="./video.mp4" type="video/mp4">
+  </video>
+
+  <!-- Bottom Controls -->
+  <div class="bottom-bar">
+    <button id="playPauseBtn" class="btn">⏸️</button>
+    <button id="muteBtn" class="btn">🔇</button>
+
+    <span id="current" class="time">0:00</span>
+    <input type="range" id="seek" value="0">
+    <span id="duration" class="time">0:00</span>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const seek = document.getElementById("seek");
+    const current = document.getElementById("current");
+    const duration = document.getElementById("duration");
+
+    playPauseBtn.addEventListener("click", () => {
+      if (video.paused) {
+        video.play();
+        playPauseBtn.textContent = "⏸️";
+      } else {
+        video.pause();
+        playPauseBtn.textContent = "▶️";
+      }
+    });
+
+    muteBtn.addEventListener("click", () => {
+      video.muted = !video.muted;
+      muteBtn.textContent = video.muted ? "🔇" : "🔊";
+    });
+
+    video.addEventListener("loadedmetadata", () => {
+      seek.max = Math.floor(video.duration);
+      duration.textContent = formatTime(video.duration);
+    });
+
+    video.addEventListener("timeupdate", () => {
+      seek.value = Math.floor(video.currentTime);
+      current.textContent = formatTime(video.currentTime);
+    });
+
+    seek.addEventListener("input", () => {
+      video.currentTime = seek.value;
+      video.play();
+      playPauseBtn.textContent = "⏸️";
+    });
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return `${min}:${sec}`;
+    }
+  </script>
+
+</body>
+</html>
