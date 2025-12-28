@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -17,75 +19,69 @@
     }
 
     video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: black;
     }
 
-    /* Title */
-    .h1 {
-      color: white;
-      text-align: center;
-      margin: 8px 0;
-      font-size: clamp(14px, 3vw, 20px);
-      z-index: 5;
-      position: relative;
-    }
-
-    
     .bottom-bar {
       position: fixed;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      z-index: 10;
+      bottom: env(safe-area-inset-bottom, 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 24px);
+      max-width: 600px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      color: white;
+      gap: 8px;
       padding: 8px 10px;
       border-radius: 16px;
-      
+      color: white;
+      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 10;
     }
 
-   
     .btn {
       background: transparent;
-      color: white;
       border: none;
-      font-size: clamp(18px, 5vw, 26px);
+      color: white;
+      font-size: 24px;
       cursor: pointer;
     }
 
-   
     .time {
-      font-size: clamp(11px, 3vw, 14px);
-      min-width: 40px;
+      font-size: 13px;
+      min-width: 42px;
       text-align: center;
     }
 
-    
     input[type="range"] {
       flex: 1;
+      min-width: 0;
       height: 4px;
-      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .btn { font-size: 20px; }
+      .time { font-size: 12px; }
     }
   </style>
 </head>
 
 <body>
 
- 
-
-  <video id="video" autoplay muted playsinline loop preload="auto">
+  <!-- VIDEO -->
+  <video id="video" autoplay muted playsinline preload="auto" loop>
     <source src="./3.mp4" type="video/mp4">
   </video>
 
-  <!-- Bottom Controls -->
+  <!-- CONTROLS -->
   <div class="bottom-bar">
     <button id="playPauseBtn" class="btn">⏸️</button>
     <button id="muteBtn" class="btn">🔇</button>
-
+    <button id="fullscreenBtn" class="btn">⛶</button>
     <span id="current" class="time">0:00</span>
     <input type="range" id="seek" value="0">
     <span id="duration" class="time">0:00</span>
@@ -95,45 +91,57 @@
     const video = document.getElementById("video");
     const playPauseBtn = document.getElementById("playPauseBtn");
     const muteBtn = document.getElementById("muteBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
     const seek = document.getElementById("seek");
     const current = document.getElementById("current");
     const duration = document.getElementById("duration");
 
-    playPauseBtn.addEventListener("click", () => {
-      if (video.paused) {
-        video.play();
-        playPauseBtn.textContent = "⏸️";
+    /* FULLSCREEN FUNCTION */
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (video.requestFullscreen) video.requestFullscreen();
+        else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
       } else {
-        video.pause();
-        playPauseBtn.textContent = "▶️";
+        document.exitFullscreen();
       }
-    });
+    }
 
-    muteBtn.addEventListener("click", () => {
+    fullscreenBtn.onclick = toggleFullscreen;
+
+    /* FIRST USER TAP */
+    document.body.addEventListener("click", () => {
+      video.play(); // allow autoplay after user interaction
+    }, { once: true });
+
+    /* CONTROLS */
+    playPauseBtn.onclick = () => {
+      video.paused ? video.play() : video.pause();
+      playPauseBtn.textContent = video.paused ? "▶️" : "⏸️";
+    };
+
+    muteBtn.onclick = () => {
       video.muted = !video.muted;
       muteBtn.textContent = video.muted ? "🔇" : "🔊";
-    });
+    };
 
-    video.addEventListener("loadedmetadata", () => {
+    video.onloadedmetadata = () => {
       seek.max = Math.floor(video.duration);
       duration.textContent = formatTime(video.duration);
-    });
+    };
 
-    video.addEventListener("timeupdate", () => {
+    video.ontimeupdate = () => {
       seek.value = Math.floor(video.currentTime);
       current.textContent = formatTime(video.currentTime);
-    });
+    };
 
-    seek.addEventListener("input", () => {
+    seek.oninput = () => {
       video.currentTime = seek.value;
-      video.play();
-      playPauseBtn.textContent = "⏸️";
-    });
+    };
 
-    function formatTime(seconds) {
-      const min = Math.floor(seconds / 60);
-      const sec = Math.floor(seconds % 60).toString().padStart(2, "0");
-      return `${min}:${sec}`;
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60).toString().padStart(2, "0");
+      return `${m}:${s}`;
     }
   </script>
 
